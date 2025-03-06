@@ -35,7 +35,9 @@ def find_empty(board: list[int], n: int) -> tuple[int, int]:
     return -1, -1
 
 
-def get_greedy_solution(n: int) -> list[tuple[int, int, int]]:
+def get_greedy_solution(n: int, debug = False) -> list[tuple[int, int, int]]:
+    if debug:
+        print(f"\n=== Ищем жадное решение ===")
     W = (n + 1) // 2
     board = [0] * n
     places = [(0, 0, W), (0, W, n - W), (W, 0, n - W)]
@@ -44,25 +46,33 @@ def get_greedy_solution(n: int) -> list[tuple[int, int, int]]:
     for x, y, w in places:
         fill_square(board, x, y, w, n)
         remain -= w * w
+        if debug:
+            print(f"Добавляем квадрат: x = {x}, y = {y}, size = {w}")
 
     while remain > 0:
         x, y = find_empty(board, n)
         if x == -1:
+            if debug:
+                print(f"Пустого места больше не осталось, жадное решение построено")
             break
         max_size = min(n - x, n - y)
         while max_size > 0 and not can_place_square(board, x, y, max_size, n):
+            if debug:
+                print(f"Добавить квадрат с размером {max_size} не получилось")
             max_size -= 1
         if max_size == 0:
             break
         fill_square(board, x, y, max_size, n)
+        if debug:
+            print(f"Добавляем квадрат: x = {x}, y = {y}, size = {max_size}")
         places.append((x, y, max_size))
         remain -= max_size * max_size
 
     return places
 
 
-def squaring(n: int) -> list[tuple[int, int, int]]:
-    best_solution = get_greedy_solution(n)  # ищем жадное решение
+def squaring(n: int, debug=False) -> list[tuple[int, int, int]]:
+    best_solution = get_greedy_solution(n, debug)  # ищем жадное решение
 
     if len(best_solution) > 2 * n:
         best_solution = [None] * (2 * n)
@@ -80,11 +90,17 @@ def squaring(n: int) -> list[tuple[int, int, int]]:
 
     while stack:
         board, places, remain = stack.pop()
+        if debug:
+            print(f"\nПереход к ветке с расположением: ", *places)
 
         if len(places) >= len(best_solution):
+            if debug:
+                print(f"Текущее размещение неоптимальней чем лучшее, отбрасываем: ", *places)
             continue
 
         if not remain:
+            if debug:
+                print(f"--> Пустого места не осталось, нашли решение еще лучше", *places)
             best_solution = places.copy()
             continue
 
@@ -93,10 +109,14 @@ def squaring(n: int) -> list[tuple[int, int, int]]:
         max_size = min(n - x, n - y)
         min_squares_needed = (remain + max_size * max_size - 1) // (max_size * max_size)
         if len(places) + min_squares_needed >= len(best_solution):
+            if debug:
+                print(f"Текущее размещение неоптимальней чем лучшее, отбрасываем: ", *places)
             continue
 
         for size in range(max_size, 0, -1):
             if not can_place_square(board, x, y, size, n):
+                if debug:
+                    print(f"Добавить квадрат с размером {size} не получилось")
                 continue
 
             new_board = board.copy()
@@ -106,6 +126,8 @@ def squaring(n: int) -> list[tuple[int, int, int]]:
 
             new_places = places.copy()
             new_places.append((x, y, size))
+            if debug:
+                print(f"Добавляем квадрат: x = {x}, y = {y}, size = {size}")
 
             stack.append((new_board, new_places, new_remain))
 
@@ -121,19 +143,23 @@ def get_div(n: int) -> int:
     return n
 
 
-def solve_squaring(n: int):
+def solve_squaring(n: int, debug = False):
     d = get_div(n)  # сжатие квадрата до наим. простого множителя
-    ans = squaring(d)
+    if debug:
+        print(f"Сжимаем квадрат до n={d}")
+    ans = squaring(d, debug)
 
     # восстановление ответа + исправление координат
     res = n // d
+    if debug:
+        print(f"Восстанавливаем ответ восстанавливая исходный квадрат, домножив на {res} всех координаты и ширину квадратов")
     ans = [(x * res + 1, y * res + 1, w * res) for x, y, w in ans]
 
     return ans
 
 if __name__ == '__main__':
     n = int(input())
-    ans = solve_squaring(n)
+    ans = solve_squaring(n, True)
     print(len(ans))
     for coords in ans:
         print(*coords)

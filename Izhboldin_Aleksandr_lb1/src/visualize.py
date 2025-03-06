@@ -18,15 +18,18 @@ def plot_time_dependency(sizes: list[int]):
 
     plt.figure(figsize=(8, 5))
     plt.plot(sizes, times, marker='o', linestyle='-', color='b')
-    # plt.yscale("log")
+
+    plt.yscale("log")
     plt.xlabel('Размер квадрата n')
     plt.ylabel('Время выполнения (сек)')
     plt.title('Зависимость времени выполнения от размера квадрата')
+    plt.xticks(sizes)
     plt.grid(True)
     plt.show()
 
 
 # Пример использования:
 if __name__ == '__main__':
+    primes = [x for x in range(2, 42) if x == get_div(x)]
     sizes = [x for x in range(2, 42)]
-    plot_time_dependency(sizes)
+    plot_time_dependency(primes)
